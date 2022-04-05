@@ -40,19 +40,30 @@ public:
     }
 
     Optional& operator=(const T& elem) {
+        if (defined) {
+            *this = elem;
+        }
         new (data) T(elem);
         defined = true;
         return *this;
     }
 
     Optional& operator=(T&& elem) {
+        if (defined) {
+            *this = std::move(elem);
+        }
         new (data) T(std::move(elem));
         defined = true;
         return *this;
     }
 
     Optional& operator=(const Optional& other) {
-        if (other.defined) {
+        if (!other.defined) {
+            // Если мы пытаемся присвоить к неопределенному объекту сбрасываем
+            Reset();
+        } else if (defined) {
+            **this = *other;
+        } else {
             new (data) T(*other);
             defined = true;
         }
@@ -60,10 +71,14 @@ public:
     }
 
     Optional& operator=(Optional&& other) {
-        if (other.defined) {
+        if (!other.defined) {
+            // Если мы пытаемся присвоить к неопределенному объекту сбрасываем
+            Reset();
+        } else if (defined) {
+            **this = *other;
+        } else {
             new (data) T(*other);
             defined = true;
-            other.defined = false;
         }
         return *this;
     }
